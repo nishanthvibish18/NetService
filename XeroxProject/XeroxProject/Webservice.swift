@@ -17,6 +17,7 @@ enum NetowrkError: Error, LocalizedError{
     case serverNotReachable
     case decodingError
     case noDataFound
+    case someErrorFound
     
     var localizationError: String{
         switch self {
@@ -28,6 +29,8 @@ enum NetowrkError: Error, LocalizedError{
             return "Decoding Error from Model"
         case .noDataFound:
             return "No Data Found"
+        case .someErrorFound:
+            return "Something happend please try again later"
         }
     }
 }
@@ -50,10 +53,8 @@ class APIBuilderMethod<T: Codable>{
 final class Webservice{
     
     static let shareInstance = Webservice()
-    private init(){
-        
-    }
-    func webRequest<T>(apiRequestBuilder: APIBuilderMethod<T>, completionHandler: @escaping (Result<T, NetowrkError>) -> ()){
+    private init(){}
+   private func webRequest<T>(apiRequestBuilder: APIBuilderMethod<T>, completionHandler: @escaping (Result<T, NetowrkError>) -> ()){
         
         guard let urlString = URL(string: apiRequestBuilder.baseUrl) else {
             completionHandler(.failure(.invalidURL))
@@ -89,4 +90,24 @@ final class Webservice{
         .resume()
     }
     
+    
+//    MARK: Converting Existing API Call into Async Await method
+    func webRequest<T>(apiRequestBuilder: APIBuilderMethod<T>) async throws -> T{
+    do{
+         return try await withCheckedThrowingContinuation { continuation in
+             
+             webRequest(apiRequestBuilder: apiRequestBuilder) { result in
+                 switch result {
+                 case .success(let success):
+                     continuation.resume(returning: success)
+                 case .failure(let failure):
+                     continuation.resume(throwing: failure)
+                 }
+             }
+         }
+        }
+        catch{
+            throw NetowrkError.someErrorFound
+        }
+    }
 }

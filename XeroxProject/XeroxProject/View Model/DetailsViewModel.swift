@@ -15,35 +15,27 @@ class DetailsViewModel: NSObject{
     }
     
 //    MARK: Fetch current IP Address
-    func currentIpApi(completionHandler: @escaping (Result<IpAddressResponseModel,NetowrkError>) -> ()){
-        let request = APIRequestService.getIpAddress
-        
-        Webservice.shareInstance.webRequest(apiRequestBuilder: request) { result in
-            switch result {
-            case .success(let success):
-                completionHandler(.success(success))
-            case .failure(let failure):
-                completionHandler(.failure(failure))
-            }
+    func currentIpAPI() async throws -> IpAddressResponseModel?{
+        do{
+            let request = APIRequestService.getIpAddress
+            let result = try await Webservice.shareInstance.webRequest(apiRequestBuilder: request)
+            return result
+        }
+        catch (let error){
+            throw error as! LocalizedError
         }
     }
     
-    
 // MARK:   Fetch Ip Details
-    func getIpDetails(ipAddress: String,completionHandler: @escaping(Result<IpdetailsModel, NetowrkError>) -> ()){
-                
-        let request = APIRequestService.getCurrentIpInfo(ipAddress: ipAddress)
-        Webservice.shareInstance.webRequest(apiRequestBuilder: request) { res in
-            switch res {
-            case .success(let success):
-                completionHandler(.success(success))
-            case .failure(let failure):
-                completionHandler(.failure(failure))
-            }
+    func getIpDetails(ipAddress: String) async throws -> IpdetailsModel?{
+        do{
+            let request = APIRequestService.getCurrentIpInfo(ipAddress: ipAddress)
+            let result = try await Webservice.shareInstance.webRequest(apiRequestBuilder: request)
+            return result
         }
-        
-        
-        
+        catch (let error){
+            throw error as! LocalizedError
+        }
     }
     
 }

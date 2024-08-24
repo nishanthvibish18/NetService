@@ -23,10 +23,12 @@ class DetailsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         NetworkMonitor.sharedInstance.startMonitor()
-
+        
         self.activityIndicator.startAnimating()
         
-        self.apiCall()
+        Task{
+            await self.apiCall()
+        }
         // Do any additional setup after loading the view.
     }
     
@@ -34,24 +36,27 @@ class DetailsViewController: UIViewController {
         self.navigationController?.navigationBar.isHidden = false
     }
  
-    private func apiCall(){
-        self.detailViewModel.currentIpApi { [weak self] result in
-            switch result {
-            case .success(let success):
-                self?.getiPDetails(ipAddress: success.ip ?? "")
-            case .failure(let failure):
-                self?.alertController(message: failure.localizationError)
-            }
+    private func apiCall() async{
+        do{
+            let response = try await self.detailViewModel.currentIpAPI()
+            await self.getiPDetails(ipAddress: response?.ip ?? "")
+        }
+        catch let error{
+            self.alertController(message: error.localizedDescription)
         }
     }
-    private func getiPDetails(ipAddress: String){
-        self.detailViewModel.getIpDetails(ipAddress: ipAddress) { [weak self] result in
-            switch result {
-            case .success(let success):                
-                self?.updateData(details: success)
-            case .failure(let failure):
-                self?.alertController(message: failure.localizationError)
+    
+    
+    private func getiPDetails(ipAddress: String) async{
+        do{
+            let result = try await self.detailViewModel.getIpDetails(ipAddress: ipAddress)
+            if let result = result {
+                self.updateData(details: result)
             }
+        }
+        catch let error{
+            self.alertController(message: error.localizedDescription)
+
         }
     }
     
