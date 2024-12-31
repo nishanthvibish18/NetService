@@ -55,7 +55,6 @@ final class Webservice{
     static let shareInstance = Webservice()
     private init(){}
    private func webRequest<T>(apiRequestBuilder: APIBuilderMethod<T>, completionHandler: @escaping (Result<T, NetowrkError>) -> ()){
-        
         guard let urlString = URL(string: apiRequestBuilder.baseUrl) else {
             completionHandler(.failure(.invalidURL))
             return
